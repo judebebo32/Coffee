@@ -1,4 +1,14 @@
-import streamlit as st
+import subprocess
+import sys
+
+# Force install scikit-learn if not found
+try:
+    import sklearn
+except ModuleNotFoundError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "scikit-learn"])
+    import sklearn  # Import again after installation
+
+import gradio as gr
 import pandas as pd
 import pickle
 
@@ -10,52 +20,57 @@ with open('best_model.pkl', 'rb') as model_file:
 with open('label_encoder.pkl', 'rb') as label_encoder_file:
     label_encoder = pickle.load(label_encoder_file)
 
-# Title of the app
-st.title("Coffee Type Prediction")
+def predict_coffee_type(time_of_day, coffee_strength, sweetness_level, milk_type, coffee_temperature, flavored_coffee, caffeine_tolerance, coffee_bean, coffee_size, dietary_preferences):
+    # Creating input DataFrame for the model
+    input_data = pd.DataFrame({
+        'Token_0': [time_of_day],
+        'Token_1': [coffee_strength],
+        'Token_2': [sweetness_level],
+        'Token_3': [milk_type],
+        'Token_4': [coffee_temperature],
+        'Token_5': [flavored_coffee],
+        'Token_6': [caffeine_tolerance],
+        'Token_7': [coffee_bean],
+        'Token_8': [coffee_size],
+        'Token_9': [dietary_preferences]
+    })
 
-# Sidebar inputs for user preferences
-st.sidebar.header("User Preferences")
+    # One-hot encode the input data (ensure it matches the training data)
+    input_encoded = pd.get_dummies(input_data)
 
-time_of_day = st.sidebar.selectbox("Time of Day", ['morning', 'afternoon', 'evening'])
-coffee_strength = st.sidebar.selectbox("Coffee Strength", ['mild', 'regular', 'strong'])
-sweetness_level = st.sidebar.selectbox("Sweetness Level", ['unsweetened', 'lightly sweetened', 'sweet'])
-milk_type = st.sidebar.selectbox("Milk Type", ['none', 'regular', 'skim', 'almond'])
-coffee_temperature = st.sidebar.selectbox("Coffee Temperature", ['hot', 'iced', 'cold brew'])
-flavored_coffee = st.sidebar.selectbox("Flavored Coffee", ['yes', 'no'])
-caffeine_tolerance = st.sidebar.selectbox("Caffeine Tolerance", ['low', 'medium', 'high'])
-coffee_bean = st.sidebar.selectbox("Coffee Bean", ['Arabica', 'Robusta', 'blend'])
-coffee_size = st.sidebar.selectbox("Coffee Size", ['small', 'medium', 'large'])
-dietary_preferences = st.sidebar.selectbox("Dietary Preferences", ['none', 'vegan', 'lactose-intolerant'])
+    # Align columns with the training data (required columns)
+    required_columns = model.feature_names_in_  # Get the feature columns from the model
+    for col in required_columns:
+        if col not in input_encoded.columns:
+            input_encoded[col] = 0
+    input_encoded = input_encoded[required_columns]
 
-# Encoding the inputs manually (same encoding as in your training data)
-input_data = pd.DataFrame({
-    'Token_0': [time_of_day],
-    'Token_1': [coffee_strength],
-    'Token_2': [sweetness_level],
-    'Token_3': [milk_type],
-    'Token_4': [coffee_temperature],
-    'Token_5': [flavored_coffee],
-    'Token_6': [caffeine_tolerance],
-    'Token_7': [coffee_bean],
-    'Token_8': [coffee_size],
-    'Token_9': [dietary_preferences]
-})
+    # Make the prediction
+    prediction = model.predict(input_encoded)[0]
 
-# One-hot encode the input data (ensure it matches the training data)
-input_encoded = pd.get_dummies(input_data)
+    # Reverse the label encoding (map the prediction back to the coffee type)
+    coffee_type = label_encoder.inverse_transform([prediction])[0]
 
-# Align columns with the training data (required columns)
-required_columns = [...]  # Include all columns from the original model training data
-for col in required_columns:
-    if col not in input_encoded.columns:
-        input_encoded[col] = 0
-input_encoded = input_encoded[required_columns]
+    return coffee_type
 
-# Make the prediction
-prediction = model.predict(input_encoded)[0]
+# Gradio Interface using components
+interface = gr.Interface(
+    fn=predict_coffee_type,
+    inputs=[
+        gr.Dropdown(['morning', 'afternoon', 'evening'], label="Time of Day"),
+        gr.Dropdown(['mild', 'regular', 'strong'], label="Coffee Strength"),
+        gr.Dropdown(['unsweetened', 'lightly sweetened', 'sweet'], label="Sweetness Level"),
+        gr.Dropdown(['none', 'regular', 'skim', 'almond'], label="Milk Type"),
+        gr.Dropdown(['hot', 'iced', 'cold brew'], label="Coffee Temperature"),
+        gr.Dropdown(['yes', 'no'], label="Flavored Coffee"),
+        gr.Dropdown(['low', 'medium', 'high'], label="Caffeine Tolerance"),
+        gr.Dropdown(['Arabica', 'Robusta', 'blend'], label="Coffee Bean"),
+        gr.Dropdown(['small', 'medium', 'large'], label="Coffee Size"),
+        gr.Dropdown(['none', 'vegan', 'lactose-intolerant'], label="Dietary Preferences")
+    ],
+    outputs=gr.Textbox(label="Recommended Coffee Type"),
+    title="Coffee Type Recommendation"
+)
 
-# Reverse the label encoding (map the prediction back to the coffee type)
-coffee_type = label_encoder.inverse_transform([prediction])[0]
-
-# Display the prediction
-st.subheader(f"Recommended Coffee: {coffee_type}")
+if __name__ == "__main__":
+    interface.launch()
