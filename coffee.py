@@ -57,7 +57,7 @@ best_rmse = float('inf')
 
 for model_name, model in models.items():
     print(f"Training {model_name}...")
-
+    
     # Use scaled data for SVM, for others, use non-scaled data
     if model_name == "SVM":
         model.fit(X_train_scaled, y_train)
@@ -65,10 +65,10 @@ for model_name, model in models.items():
     else:
         model.fit(X_train, y_train)
         y_test_pred = model.predict(X_test)
-
+    
     # Calculate RMSE for the test dataset
     rmse_test = math.sqrt(mean_squared_error(y_test, y_test_pred))
-
+    
     # Save the best model based on RMSE for the test dataset
     if rmse_test < best_rmse:
         best_rmse = rmse_test
