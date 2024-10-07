@@ -1,6 +1,18 @@
-gradio==3.9
-pandas==1.5.0
-scikit-learn
-openpyxl==3.0.9
-numpy==1.21.2
-pickle5==0.0.12
+# Streamlit web framework
+streamlit==1.25.0
+
+# Data manipulation and numerical operations
+pandas==2.1.0
+numpy==1.25.2
+
+# Machine learning libraries
+scikit-learn==1.2.2
+
+# Excel file handling
+openpyxl==3.1.2
+
+# Pickle for saving/loading models (part of Python’s standard library, no need to install)
+
+# Optional libraries for math functions
+# These are standard libraries in Python and do not require installation
+
