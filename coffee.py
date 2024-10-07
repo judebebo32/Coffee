@@ -1,9 +1,9 @@
-# Import necessary libraries
+# Importing necessary libraries
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -13,10 +13,11 @@ import math
 import pickle
 
 # Load the dataset
-file_name = '/content/coffee_recommendation_dataset.xlsx'  # Ensure this file is in the same directory as your script
+file_name = 'coffee_recommendation_dataset.xlsx'  # Ensure this file is in the same directory as your script
 df = pd.read_excel(file_name)
 
 # Data Preprocessing
+
 # Encode categorical variables
 label_encoder = LabelEncoder()
 
